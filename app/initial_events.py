@@ -1,11 +1,9 @@
 import discord
 from discord import Member
-from config.settings import get_owner_id;
+from config.settings import get_owner_id
 from app.setup import create_roles
-import asyncio
 from app.safe_dm import safe_dm
 from datetime import datetime
-
 def register_events(client: discord.Client)->None:
 
     @client.event
@@ -15,7 +13,7 @@ def register_events(client: discord.Client)->None:
         if len(client.guilds) == 0:
             print("aviso: bot nao esta em nenhum servidor. encerrando servicos")
             await client.close()
-            return;
+            return
     
         else:
             await client.change_presence(status=discord.Status.do_not_disturb, activity=discord.Game("a vida fora"))
