@@ -4,23 +4,27 @@ from config.settings import get_owner_id
 from app.setup import create_roles
 from app.safe_dm import safe_dm
 from datetime import datetime
-def register_events(client: discord.Client)->None:
+
+
+def register_events(client: discord.Client) -> None:
 
     @client.event
     async def on_ready():
-        print(f'bot logado como: {client.user}')
+        print(f"bot logado como: {client.user}")
         owner_id = get_owner_id()
         if len(client.guilds) == 0:
             print("aviso: bot nao esta em nenhum servidor. encerrando servicos")
             await client.close()
             return
-    
+
         else:
-            await client.change_presence(status=discord.Status.do_not_disturb, activity=discord.Game("a vida fora"))
+            await client.change_presence(
+                status=discord.Status.do_not_disturb, activity=discord.Game("a vida fora")
+            )
 
         for guild in client.guilds:
             if guild.owner_id != owner_id:
-                #await guild.leave()
+                await guild.leave()
                 print(f"saindo da guilda {guild.name} pois nao sou o dono dela")
             else:
                 await create_roles(guild)
@@ -37,10 +41,11 @@ def register_events(client: discord.Client)->None:
                                 await member.add_roles(jogador)
                                 print(f"{member.name} adicionado como {jogador.name}")
                             except discord.Forbidden:
-                                print(f"sem permissao para adicionar {jogador.name} a {member.name}")
+                                print(
+                                    f"sem permissao para adicionar {jogador.name} a {member.name}"
+                                )
                             except discord.HTTPException as e:
                                 print(f"falha ao adicionar role para {member.name}: {e}")
-        
 
     @client.event
     async def on_member_join(member: Member):
@@ -61,12 +66,14 @@ def register_events(client: discord.Client)->None:
                         "• Você possui **XP**, **moedas** e **gemas** para comprar personagens e itens\n"
                     ),
                     color=discord.Color.blurple(),
-                    timestamp=datetime.now()
+                    timestamp=datetime.now(),
                 )
                 embed.set_footer(text="Divirta-se e boa sorte!")
                 sent = await safe_dm(member, embed=embed)
                 if not sent:
-                    print(f"não foi possível enviar DM para {member.name}. DMs podem estar desativadas.")
+                    print(
+                        f"não foi possível enviar DM para {member.name}. DMs podem estar desativadas."
+                    )
                 print(f"{member.name} adicionado como {jogador.name}")
             except discord.Forbidden:
                 print(f"sem permissao para adicionar {jogador.name} a {member.name}")
