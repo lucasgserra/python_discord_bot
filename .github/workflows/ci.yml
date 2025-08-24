@@ -75,6 +75,5 @@ jobs:
               --base develop \
               --head "${GITHUB_REF_NAME}" \
               --title "Merge ${GITHUB_REF_NAME} into develop" \
-              --body "PR automático criado após CI verde." \
-              --label "automated,ci"
+              --body "PR automático criado após CI verde."
           fi
