@@ -1,10 +1,8 @@
 #!/bin/bash
 set -e
 
-# Mensagem de commit como parâmetro (default se não passar nada)
 COMMIT_MSG=${1:-"style: format with black & ruff"}
 
-# Instala black e ruff só se não tiverem
 if ! py -m pip show black > /dev/null 2>&1; then
   echo "▶ Instalando black..."
   py -m pip install black
@@ -28,4 +26,11 @@ echo "▶ Commitando..."
 git commit -m "$COMMIT_MSG" || echo "Nenhuma mudança para commitar"
 
 echo "▶ Dando push..."
-git push
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
+  git push
+else
+  echo "▶ Branch sem upstream, configurando com 'git push -u origin $BRANCH'"
+  git push -u origin "$BRANCH"
+fi
