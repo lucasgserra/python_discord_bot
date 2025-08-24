@@ -1,15 +1,11 @@
+from config.settings import get_settings,get_intents
+from app.events import register_events
 import discord
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
-
-token = os.getenv('DISCORD_TOKEN')
-intents = discord.Intents.default()
+settings = get_settings()
+intents = get_intents()
 client = discord.Client(intents=intents)
 
-@client.event
-async def on_ready():
-    print(f'bot has started was {client.user}')
+register_events(client)
 
-client.run(token)
+client.run(settings.token)
