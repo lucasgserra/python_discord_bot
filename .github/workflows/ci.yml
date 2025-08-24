@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_type == 'branch' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff black pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Lint with Ruff
+        run: ruff check .
+
+      - name: Format check with Black
+        run: black --check .
+
+      - name: Run tests (if any)
+        run: |
+          if [ -d tests ]; then pytest -q; else echo "No tests/ directory. Skipping."; fi
+
+  create-pr:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    if: >
+      ${{
+        success()
+        && github.event.repository.fork == false
+        && github.ref_type == 'branch'
+        && github.ref_name != 'main'
+        && github.ref_name != 'develop'
+        && !startsWith(github.ref_name, 'dependabot/')
+      }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create or update PR to develop
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: develop
+          head: ${{ github.ref_name }}
+          title: "Merge ${{ github.ref_name }} into develop"
+          body: |
+            This PR was automatically created after CI passed.
+            - Source branch: `${{ github.ref_name }}`
+            - Target: `develop`
+          labels: automated, ci
+          draft: false
