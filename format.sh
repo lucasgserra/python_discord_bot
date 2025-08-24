@@ -1,23 +1,33 @@
 #!/bin/bash
 set -e
 
-COMMIT_MSG=${1:-"style: format with black & ruff"}
+VENV_PY=".venv/Scripts/python.exe"
 
-if ! py -m pip show black > /dev/null 2>&1; then
-  echo "▶ Instalando black..."
-  py -m pip install black
+if [ ! -f "$VENV_PY" ]; then
+  echo "▶ .venv não encontrado, criando..."
+  py -m venv .venv
 fi
 
-if ! py -m pip show ruff > /dev/null 2>&1; then
+echo "▶ Usando Python do .venv: $VENV_PY"
+
+COMMIT_MSG=${1:-"style: format with black & ruff"}
+
+# garante dependências no venv
+if ! "$VENV_PY" -m pip show black > /dev/null 2>&1; then
+  echo "▶ Instalando black..."
+  "$VENV_PY" -m pip install black
+fi
+
+if ! "$VENV_PY" -m pip show ruff > /dev/null 2>&1; then
   echo "▶ Instalando ruff..."
-  py -m pip install ruff
+  "$VENV_PY" -m pip install ruff
 fi
 
 echo "▶ Corrigindo com Ruff..."
-py -m ruff check . --fix
+"$VENV_PY" -m ruff check . --fix
 
 echo "▶ Formatando com Black..."
-py -m black .
+"$VENV_PY" -m black .
 
 echo "▶ Adicionando mudanças..."
 git add -A
