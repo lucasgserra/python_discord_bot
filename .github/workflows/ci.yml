@@ -42,7 +42,7 @@ jobs:
         run: |
           if [ -d tests ]; then pytest -q; else echo "No tests/ directory. Skipping."; fi
 
-    create-pr:
+  create-pr:
     needs: lint-and-test
     runs-on: ubuntu-latest
     if: >-
@@ -65,13 +65,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
-          # Se já existir PR aberto de head->develop, apenas imprime; senão, cria
-          if gh pr list --head "${GITHUB_REF_NAME}" --base develop --state open --json url --jq '.[0].url' >/dev/null; then
-            echo "PR já existe. Nada a fazer."
+          echo "▶ Criando ou atualizando PR de $GITHUB_REF_NAME para develop..."
+          PR_URL=$(gh pr list --head "${GITHUB_REF_NAME}" --base develop --state open --json url --jq '.[0].url' || true)
+
+          if [ -n "$PR_URL" ]; then
+            echo "✅ PR já existe: $PR_URL"
           else
             gh pr create \
               --base develop \
               --head "${GITHUB_REF_NAME}" \
               --title "Merge ${GITHUB_REF_NAME} into develop" \
-              --body "PR automático aberto após CI verde."
+              --body "PR automático criado após CI verde." \
+              --label "automated,ci"
           fi
