@@ -6,6 +6,7 @@ from app.safe_dm import safe_dm
 from database.initial_config import start
 from datetime import datetime
 from database.mongo import get_db, close_client
+from service.user_service import ensure_user_exists, remove_user
 
 
 def register_events(client: discord.Client) -> None:
@@ -54,9 +55,16 @@ def register_events(client: discord.Client) -> None:
         await close_client()
 
     @client.event
+    async def on_member_remove(member: Member):
+        if member.bot:
+            return
+        await remove_user(member.id, member.guild)
+
+    @client.event
     async def on_member_join(member: Member):
         if member.bot:
             return
+        await ensure_user_exists(member.id, member.guild)
         jogador = discord.utils.get(member.guild.roles, name="Jogador")
         if jogador:
             try:
