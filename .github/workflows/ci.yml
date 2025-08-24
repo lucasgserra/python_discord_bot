@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_type == 'branch' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff black pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Lint with Ruff
+        run: ruff check .
+
+      - name: Format check with Black
+        run: black --check .
+
+      - name: Run tests (if any)
+        run: |
+          if [ -d tests ]; then pytest -q; else echo "No tests/ directory. Skipping."; fi
+
+  create-pr:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    if: >-
+      ${{
+        success()
+        && github.event.repository.fork == false
+        && github.ref_type == 'branch'
+        && github.ref_name != 'main'
+        && github.ref_name != 'develop'
+        && !startsWith(github.ref_name, 'dependabot/')
+      }}
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create or update PR to develop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          echo "▶ Criando ou atualizando PR de $GITHUB_REF_NAME para develop..."
+          PR_URL=$(gh pr list --head "${GITHUB_REF_NAME}" --base develop --state open --json url --jq '.[0].url' || true)
+
+          if [ -n "$PR_URL" ]; then
+            echo "✅ PR já existe: $PR_URL"
+          else
+            gh pr create \
+              --base develop \
+              --head "${GITHUB_REF_NAME}" \
+              --title "Merge ${GITHUB_REF_NAME} into develop" \
+              --body "PR automático criado após CI verde."
+          fi

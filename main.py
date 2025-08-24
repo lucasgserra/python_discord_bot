@@ -1,5 +1,5 @@
-from config.settings import get_settings,get_intents
-from app.events import register_events
+from config.settings import get_settings, get_intents
+from app.initial_events import register_events
 import discord
 
 settings = get_settings()
