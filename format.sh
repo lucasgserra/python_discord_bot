@@ -1,12 +1,9 @@
 #!/bin/bash
 set -e
 
-if [ -d ".venv" ]; then
-  source .venv/Scripts/activate
-else
-  echo "▶ .venv não encontrado, crie com: python -m venv .venv"
-  exit 1
-fi
+echo "▶ Entrando na .venv..."
+py -m venv .venv
+source .venv/Scripts/activate
 
 COMMIT_MSG=${1:-"style: format with black & ruff"}
 
