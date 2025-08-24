@@ -30,3 +30,10 @@ def get_intents() -> discord.Intents:
     intents.members = True
     intents.guilds = True
     return intents
+
+
+def get_mongo_url() -> str:
+    mongo_url = os.getenv("MONGO_DB_URL")
+    if not mongo_url:
+        raise RuntimeError("MongoDB URL not defined")
+    return mongo_url
