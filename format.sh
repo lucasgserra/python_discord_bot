@@ -1,27 +1,33 @@
 #!/bin/bash
 set -e
 
-echo "▶ Entrando na .venv..."
-py -m venv .venv
-source .venv/Scripts/activate
+VENV_PY=".venv/Scripts/python.exe"
+
+if [ ! -f "$VENV_PY" ]; then
+  echo "▶ .venv não encontrado, criando..."
+  py -m venv .venv
+fi
+
+echo "▶ Usando Python do .venv: $VENV_PY"
 
 COMMIT_MSG=${1:-"style: format with black & ruff"}
 
-if ! py -m pip show black > /dev/null 2>&1; then
+# garante dependências no venv
+if ! "$VENV_PY" -m pip show black > /dev/null 2>&1; then
   echo "▶ Instalando black..."
-  py -m pip install black
+  "$VENV_PY" -m pip install black
 fi
 
-if ! py -m pip show ruff > /dev/null 2>&1; then
+if ! "$VENV_PY" -m pip show ruff > /dev/null 2>&1; then
   echo "▶ Instalando ruff..."
-  py -m pip install ruff
+  "$VENV_PY" -m pip install ruff
 fi
 
 echo "▶ Corrigindo com Ruff..."
-py -m ruff check . --fix
+"$VENV_PY" -m ruff check . --fix
 
 echo "▶ Formatando com Black..."
-py -m black .
+"$VENV_PY" -m black .
 
 echo "▶ Adicionando mudanças..."
 git add -A
