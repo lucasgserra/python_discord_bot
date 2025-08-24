@@ -4,3 +4,4 @@ asyncio
 black
 ruff
 motor
+uuid
