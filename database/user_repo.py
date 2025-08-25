@@ -1,6 +1,7 @@
 from database.mongo import get_db
-import uuid
 from models import Card, User
+from typing import List
+import uuid
 
 
 async def create_user(discord_id: int):
@@ -69,12 +70,11 @@ async def user_has_card(discord_id: int, card_id: str) -> bool:
     )
     return doc is not None
 
-
-async def get_user_cards(discord_id: int) -> list[Card]:
+async def get_user_cards(discord_id: int) -> List[Card]:
     db = get_db()
     user = await db.usuarios.find_one({"discord_id": discord_id}, {"cartas": 1})
     if not user or not user.get("cartas"):
         return []
     card_ids = user["cartas"]
     cursor = db.cartas.find({"_id": {"$in": card_ids}})
-    return [doc async for doc in cursor]
+    return [Card(**doc) async for doc in cursor]

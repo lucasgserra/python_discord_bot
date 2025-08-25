@@ -8,18 +8,37 @@ from database.indexes import ensure_indexes
 from datetime import datetime
 from database.mongo import get_db, close_client
 from service.user_service import ensure_user_exists, remove_user
+from config.settings import get_main_guild_id
+from discord import app_commands
+from app.commands import setup_commands
+from service import user_service
 
+GUILD_ID = get_main_guild_id()
 
 def register_events(client: discord.Client) -> None:
+    tree = app_commands.CommandTree(client)
+    setup_commands(tree, guild_id=get_main_guild_id())
 
     @client.event
     async def on_ready():
         await get_db().command("ping")
         await ensure_indexes()
 
-        await client.change_presence(
-            status=discord.Status.do_not_disturb, activity=discord.Game("a vida fora")
-        )
+        if GUILD_ID:
+            guild = discord.Object(id=GUILD_ID)
+            await tree.sync(guild=guild)
+            print(f"slash commands sincronizados para a guild {GUILD_ID}")
+        else:
+            try:
+                await tree.sync()
+                print("slash commands sincronizados globalmente")
+            except Exception as e:
+                print("falha ao sincronizar slash commands:", e)
+
+            await client.change_presence(
+                status=discord.Status.do_not_disturb, activity=discord.Game("a vida fora")
+            )
+
         print(f"bot logado como: {client.user}")
         owner_id = get_owner_id()
         if len(client.guilds) == 0:
@@ -37,6 +56,10 @@ def register_events(client: discord.Client) -> None:
                 jogador = discord.utils.get(guild.roles, name="Jogador")
                 adm = discord.utils.get(guild.roles, name="Administrador")
                 for member in guild.members:
+                    exists_user = await user_service.get_user(member.id)
+                    if not exists_user:
+                        await ensure_user_exists(member.id, guild)
+
                     if member.bot:
                         continue
                     if member.id == owner_id:
