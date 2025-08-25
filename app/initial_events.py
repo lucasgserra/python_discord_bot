@@ -4,6 +4,7 @@ from config.settings import get_owner_id
 from app.setup import create_roles
 from app.safe_dm import safe_dm
 from database.initial_config import start
+from database.indexes import ensure_indexes
 from datetime import datetime
 from database.mongo import get_db, close_client
 from service.user_service import ensure_user_exists, remove_user
@@ -14,6 +15,8 @@ def register_events(client: discord.Client) -> None:
     @client.event
     async def on_ready():
         await get_db().command("ping")
+        await ensure_indexes()
+
         await client.change_presence(
             status=discord.Status.do_not_disturb, activity=discord.Game("a vida fora")
         )
