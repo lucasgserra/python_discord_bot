@@ -15,6 +15,7 @@ from service import user_service
 
 GUILD_ID = get_main_guild_id()
 
+
 def register_events(client: discord.Client) -> None:
     tree = app_commands.CommandTree(client)
     setup_commands(tree, guild_id=get_main_guild_id())

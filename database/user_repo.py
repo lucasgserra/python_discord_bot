@@ -1,6 +1,5 @@
 from database.mongo import get_db
 from models import Card, User
-from typing import List
 import uuid
 
 
@@ -70,7 +69,8 @@ async def user_has_card(discord_id: int, card_id: str) -> bool:
     )
     return doc is not None
 
-async def get_user_cards(discord_id: int) -> List[Card]:
+
+async def get_user_cards(discord_id: int) -> list[Card]:
     db = get_db()
     user = await db.usuarios.find_one({"discord_id": discord_id}, {"cartas": 1})
     if not user or not user.get("cartas"):
