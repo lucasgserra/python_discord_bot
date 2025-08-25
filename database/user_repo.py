@@ -1,6 +1,6 @@
 from database.mongo import get_db
-import uuid
 from models import Card, User
+import uuid
 
 
 async def create_user(discord_id: int):
@@ -77,4 +77,4 @@ async def get_user_cards(discord_id: int) -> list[Card]:
         return []
     card_ids = user["cartas"]
     cursor = db.cartas.find({"_id": {"$in": card_ids}})
-    return [doc async for doc in cursor]
+    return [Card(**doc) async for doc in cursor]
