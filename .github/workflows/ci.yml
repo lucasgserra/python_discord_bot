@@ -45,7 +45,7 @@ jobs:
   create-pr:
     needs: lint-and-test
     runs-on: ubuntu-latest
-    if: >
+    if: >-
       ${{
         success()
         && github.event.repository.fork == false
@@ -54,19 +54,26 @@ jobs:
         && github.ref_name != 'develop'
         && !startsWith(github.ref_name, 'dependabot/')
       }}
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
       - name: Create or update PR to develop
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: develop
-          head: ${{ github.ref_name }}
-          title: "Merge ${{ github.ref_name }} into develop"
-          body: |
-            This PR was automatically created after CI passed.
-            - Source branch: `${{ github.ref_name }}`
-            - Target: `develop`
-          labels: automated, ci
-          draft: false
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          echo "▶ Criando ou atualizando PR de $GITHUB_REF_NAME para develop..."
+          PR_URL=$(gh pr list --head "${GITHUB_REF_NAME}" --base develop --state open --json url --jq '.[0].url' || true)
+
+          if [ -n "$PR_URL" ]; then
+            echo "✅ PR já existe: $PR_URL"
+          else
+            gh pr create \
+              --base develop \
+              --head "${GITHUB_REF_NAME}" \
+              --title "Merge ${GITHUB_REF_NAME} into develop" \
+              --body "PR automático criado após CI verde."
+          fi

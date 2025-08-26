@@ -18,6 +18,10 @@ def get_owner_id() -> int:
     return int(owner_id)
 
 
+def get_main_guild_id() -> int | None:
+    return int(os.getenv("GUILD_ID")) if os.getenv("GUILD_ID") else None
+
+
 def get_settings() -> Settings:
     token = os.getenv("DISCORD_TOKEN")
     if not token:
@@ -30,3 +34,10 @@ def get_intents() -> discord.Intents:
     intents.members = True
     intents.guilds = True
     return intents
+
+
+def get_mongo_url() -> str:
+    mongo_url = os.getenv("MONGO_DB_URL")
+    if not mongo_url:
+        raise RuntimeError("MongoDB URL not defined")
+    return mongo_url
